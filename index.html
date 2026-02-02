@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QualiDesafio Autopeças — Missão Zero Retrabalho</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --txt: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --good: #38f2b3;
+      --bad: #ff5e7a;
+      --accent: #7aa7ff;
+      --warning: #ffd166;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(122,167,255,.18), transparent 55%),
+                  radial-gradient(900px 600px at 85% 30%, rgba(56,242,179,.14), transparent 60%),
+                  radial-gradient(900px 600px at 40% 95%, rgba(255,94,122,.12), transparent 60%),
+                  var(--bg);
+      color: var(--txt);
+      font: 16px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+    .wrap { width: min(980px, 100%); }
+    .top {
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between;
+      margin-bottom: 14px;
+    }
+    .brand {
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .brand h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: .2px; }
+    .brand p { margin: 0; color: var(--muted); font-size: 13px; }
+    .pill {
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 10px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 13px;
+      height: fit-content;
+      white-space: nowrap;
+    }
+    .grid {
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .pill { display:none; }
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .progress {
+      height: 10px;
+      background: rgba(255,255,255,.10);
+      border-radius: 999px;
+      overflow:hidden;
+      margin: 10px 0 0;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(122,167,255,1), rgba(56,242,179,1));
+      border-radius: 999px;
+      transition: width .25s ease;
+    }
+    .qmeta {
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    .tag {
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .timer {
+      font-variant-numeric: tabular-nums;
+      color: var(--warning);
+      font-weight: 600;
+    }
+    .question {
+      font-size: 22px;
+      margin: 6px 0 14px;
+      letter-spacing: .2px;
+    }
+    .choices { display:grid; gap: 10px; }
+    button.choice {
+      text-align:left;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.07);
+      color: var(--txt);
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      font-size: 16px;
+    }
+    button.choice:hover {
+      background: rgba(255,255,255,.10);
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.18);
+    }
+    button.choice:disabled { cursor: default; opacity: .92; }
+    .good { border-color: rgba(56,242,179,.65) !important; background: rgba(56,242,179,.12) !important; }
+    .bad { border-color: rgba(255,94,122,.65) !important; background: rgba(255,94,122,.12) !important; }
+
+    .panel {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      display:none;
+    }
+    .panel h3 { margin: 0 0 6px; font-size: 16px; }
+    .panel p { margin: 6px 0; color: var(--muted); }
+
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top: 14px; }
+    .btn {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: var(--txt);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      font-weight: 600;
+    }
+    .btn:hover { background: rgba(255,255,255,.12); transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+    .btn.primary {
+      background: linear-gradient(90deg, rgba(122,167,255,1), rgba(56,242,179,1));
+      border: none;
+      color: #081021;
+    }
+    .btn.primary:hover { filter: brightness(1.06); }
+
+    .side h2 { margin: 0 0 10px; font-size: 16px; color: var(--muted); }
+    .stat {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      margin-bottom: 10px;
+    }
+    .stat b { font-variant-numeric: tabular-nums; }
+    .badge {
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      margin: 6px 0;
+      color: var(--muted);
+    }
+    .footer { margin-top: 12px; color: rgba(255,255,255,.55); font-size: 12px; }
+    .tiny { font-size: 12px; color: rgba(255,255,255,.65); }
+    .hidden { display:none !important; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      background: rgba(10,14,28,.95);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--txt);
+      padding: 10px 12px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      display:none;
+      max-width: min(560px, 92vw);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>🛠️ QualiDesafio Autopeças — Missão Zero Retrabalho</h1>
+        <p>Charadas rápidas • múltipla escolha • foco em BPF, rastreabilidade e Cliente (OEM)</p>
+        <div class="progress" aria-label="Progresso"><div class="bar" id="bar"></div></div>
+      </div>
+      <div class="pill">🎯 Dica: se tiver dúvida → <b style="color:var(--txt);">para e confirma</b></div>
+    </div>
+
+    <div class="grid">
+      <div class="card main">
+        <div class="qmeta">
+          <div class="tag" id="moduleTag">📦 Módulo</div>
+          <div class="tag">✅ Pontos: <b id="points">0</b></div>
+          <div class="tag">🔥 Combo: <b id="combo">0</b></div>
+          <div class="tag timer">⏱️ Tempo: <b id="time">0.0s</b></div>
+        </div>
+
+        <div id="startScreen">
+          <div class="question">Pronto(a) para a missão? 🚀</div>
+          <p style="color:var(--muted); margin-top:0;">
+            40 perguntas rápidas de autopeças. Responda sem pressa, mas com atenção.<br/>
+            Acertou rápido? Ganha bônus! ⭐
+          </p>
+          <div class="actions">
+            <button class="btn primary" id="btnStart">Começar</button>
+            <button class="btn" id="btnShuffle">Embaralhar perguntas</button>
+            <button class="btn" id="btnMode">Modo: <span id="modeLabel">Treino</span></button>
+          </div>
+          <p class="tiny">Modo Treino: sem pressão. Modo Desafio: 12s por pergunta.</p>
+        </div>
+
+        <div id="quizScreen" class="hidden">
+          <div class="question" id="qtext">Pergunta</div>
+          <div class="choices" id="choices"></div>
+
+          <div class="panel" id="panel">
+            <h3 id="resultTitle">✅ Certo!</h3>
+            <p><b>Por quê:</b> <span id="why"></span></p>
+            <p><b>Dica:</b> <span id="tip"></span></p>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="btnNext" disabled>Próxima</button>
+            <button class="btn" id="btnRestart">Reiniciar</button>
+          </div>
+        </div>
+
+        <div id="endScreen" class="hidden">
+          <div class="question">Fim da missão! 🎉</div>
+          <p style="color:var(--muted); margin-top:0;">
+            Sua pontuação final: <b id="finalPoints"></b> • Acertos: <b id="finalHits"></b>/40
+          </p>
+
+          <div id="badges"></div>
+
+          <div class="actions">
+            <button class="btn primary" id="btnCopy">Copiar texto para postar no LinkedIn</button>
+            <button class="btn" id="btnDownload">Baixar resultado (TXT)</button>
+            <button class="btn" id="btnPlayAgain">Jogar de novo</button>
+          </div>
+
+          <p class="footer">Dica: publique este arquivo em um site (GitHub Pages / Netlify) para virar um link público.</p>
+        </div>
+      </div>
+
+      <div class="card side">
+        <h2>📊 Placar</h2>
+        <div class="stat"><span>Questão</span><b id="idx">0</b></div>
+        <div class="stat"><span>Acertos</span><b id="hits">0</b></div>
+        <div class="stat"><span>Erros</span><b id="miss">0</b></div>
+        <div class="stat"><span>Melhor combo</span><b id="bestCombo">0</b></div>
+
+        <h2 style="margin-top:14px;">🏅 Conquistas</h2>
+        <div class="badge">🧼 Anti-Contaminação: 8+ acertos no Módulo 1</div>
+        <div class="badge">🏷️ Mestre do Lote: 8+ acertos no Módulo 2</div>
+        <div class="badge">🔧 Torque Certo: 8+ acertos no Módulo 3</div>
+        <div class="badge">🚚 Cliente em 1º Lugar: 8+ acertos no Módulo 4</div>
+
+        <p class="footer">⚠️ Educativo. Siga sempre as regras e padrões oficiais da sua fábrica.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const DATA = {"title": "QualiDesafio Autopeças — Missão Zero Retrabalho", "subtitle": "Charadas rápidas • múltipla escolha • foco em BPF, rastreabilidade e Cliente (OEM)", "questions": [{"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Charada: não sou peça, mas se eu cair no produto, viro dor de cabeça no cliente. Quem sou eu?", "choices": ["A) Parafuso solto (FOD)", "B) Sorriso", "C) Música", "D) Café"], "a": 0, "why": "Parafuso/objeto estranho pode travar montagem e gerar devolução.", "tip": "Mantenha bolsos fechados e faça varredura da bancada."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Achou cavaco/limalha em cima da peça. O correto é…", "choices": ["A) Soprar com a boca e seguir", "B) Limpar conforme padrão e separar se necessário", "C) Fingir que não viu", "D) Passar a mão e montar"], "a": 1, "why": "Cavaco pode causar vazamento, risco de quebra e reclamação.", "tip": "Use ar/escova/limpeza conforme instrução e EPC/EPIs."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Óleo/graxa na área onde deveria estar “limpo” é…", "choices": ["A) Normal", "B) Um risco de contaminação", "C) Um bônus", "D) Sinal de produtividade"], "a": 1, "why": "Contaminação pode afetar aderência, vedação e inspeção.", "tip": "Siga a regra de zonas: sujo x limpo."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Luvas rasgadas na montagem de componente crítico…", "choices": ["A) Dá pra terminar o turno", "B) Troca na hora", "C) Só troca se o supervisor ver", "D) Usa fita para remendar"], "a": 1, "why": "Luva rasgada aumenta risco de contaminação e dano à peça.", "tip": "Luva é barreira: rasgou = trocou."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Celular na bancada e mão na peça: isso vira…", "choices": ["A) Agilidade", "B) Risco de sujeira e erro", "C) Inspeção extra", "D) Nada demais"], "a": 1, "why": "Celular traz sujeira e distrai, aumentando falha humana.", "tip": "Se precisar usar, pare, higienize e volte ao padrão."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Pano sujo para “limpar” peça é…", "choices": ["A) Economia", "B) Contaminação na certa", "C) Melhor que nada", "D) Regra do 5S"], "a": 1, "why": "Pano sujo espalha sujeira e pode riscar superfícies.", "tip": "Use material de limpeza aprovado e identificado."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Uma peça caiu no chão. A ação correta é…", "choices": ["A) Pegou, soprou e montou", "B) Separar e seguir a regra de queda/inspeção", "C) Esconder para não “dar BO”", "D) Colocar no fim da caixa"], "a": 1, "why": "Queda pode causar dano invisível e virar falha no cliente.", "tip": "Peça com dúvida não segue: separa e checa."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "A embalagem de retorno (caixa) está suja/rasgada. O que fazer?", "choices": ["A) Usar assim mesmo", "B) Trocar/recuperar conforme padrão e avisar", "C) Colocar fita por cima sem avisar", "D) Misturar com caixas boas"], "a": 1, "why": "Embalagem ruim pode contaminar e danificar produto no transporte.", "tip": "Embalagem também é qualidade para o cliente."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Charada: eu não apareço na peça, mas meu sumiço atrapalha o processo. Quem sou eu?", "choices": ["A) Tampa de proteção", "B) Piada", "C) Rádio", "D) Relógio"], "a": 0, "why": "Falta de proteção pode gerar risco de dano/contaminação.", "tip": "Se faltou proteção, pare e regularize antes de seguir."}, {"module": "Módulo 1 — Limpeza, Contaminação e FOD", "q": "Lixeira transbordando perto da linha…", "choices": ["A) Deixa pro próximo turno", "B) Trocar e descartar correto", "C) Empurra com o pé", "D) Coloca no chão"], "a": 1, "why": "Acúmulo de lixo aumenta sujeira, risco e bagunça.", "tip": "5S é prevenção de defeito."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Etiqueta ilegível/rasgada na caixa. O certo é…", "choices": ["A) Chutar qual é", "B) Parar e pedir etiqueta correta", "C) Misturar com outra caixa", "D) Seguir e avisar depois"], "a": 1, "why": "Sem etiqueta correta, perde rastreabilidade e aumenta risco de envio errado.", "tip": "Sem identificação = sem uso."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Misturar lotes diferentes no mesmo pallet sem controle pode…", "choices": ["A) Ajudar a produção", "B) Quebrar rastreabilidade", "C) Melhorar qualidade", "D) Não muda nada"], "a": 1, "why": "Se der problema, não dá pra saber qual lote afetou o cliente.", "tip": "Lote separado e identificado sempre."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Charada: eu sou um número que salva a empresa quando dá problema no cliente. Quem sou eu?", "choices": ["A) Lote/Serial", "B) Número da sorte", "C) Placa do carro", "D) CEP"], "a": 0, "why": "Lote/serial permite rastrear e agir rápido (menos custo e risco).", "tip": "Nunca pule registro de lote/serial."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Caixa com Part Number (código) diferente do que você precisa. O que fazer?", "choices": ["A) Usar assim mesmo", "B) Conferir com supervisor/qualidade e separar", "C) Riscar e escrever por cima", "D) Misturar para “não faltar”"], "a": 1, "why": "PN errado vira peça errada no cliente: devolução e parada de linha.", "tip": "Código manda. Se divergiu, não use."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Você pegou peça boa e colocou em caixa de refugo sem querer. Melhor atitude?", "choices": ["A) Deixar assim", "B) Corrigir imediatamente e avisar", "C) Jogar fora para não confundir", "D) Esconder"], "a": 1, "why": "Mistura bom/ruim gera erro e retrabalho.", "tip": "Bom e ruim sempre separados e identificados."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Dois materiais parecidos, cores iguais. Como evitar troca?", "choices": ["A) Pela memória", "B) Conferir etiqueta/PN e local padrão", "C) Pelo “feeling”", "D) Pelo peso na mão"], "a": 1, "why": "Conferência objetiva reduz erro humano.", "tip": "Regra: etiqueta primeiro, depois pega."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Registrar produção com número errado é…", "choices": ["A) Pequeno detalhe", "B) Pode virar problemão no cliente", "C) Normal", "D) Melhor que não registrar"], "a": 1, "why": "Registro errado atrapalha rastreio, análise e ações de contenção.", "tip": "Antes de salvar, confira 2 vezes."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Re-trabalho feito, mas sem registro. Isso é…", "choices": ["A) Ok", "B) Risco: perde histórico e controle", "C) Ajuda a meta", "D) Só burocracia"], "a": 1, "why": "Sem registro, não há controle do que foi mexido na peça.", "tip": "Retrabalho sempre com identificação e aprovação."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Charada: eu não sou defeito, mas se eu faltar, o defeito aparece depois. Quem sou eu?", "choices": ["A) Check/inspeção do processo", "B) Café", "C) Música", "D) Pressa"], "a": 0, "why": "Check do processo pega erro antes de seguir adiante.", "tip": "Check curto e bem feito economiza retrabalho."}, {"module": "Módulo 2 — Rastreabilidade, Etiqueta e Lote", "q": "Você encontrou uma caixa sem tampa, aberta, com risco de sujeira. O correto é…", "choices": ["A) Usar logo para não perder tempo", "B) Proteger, identificar e avisar", "C) Colocar embaixo da bancada", "D) Passar para o próximo setor"], "a": 1, "why": "Material exposto pode contaminar e gerar defeito.", "tip": "Proteção e identificação são parte do padrão."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Charada: eu aperto do jeito certo. Se eu errar, o cliente sente. Quem sou eu?", "choices": ["A) Torque", "B) Sorte", "C) Pressa", "D) Palpite"], "a": 0, "why": "Torque errado pode causar vazamento, ruído ou quebra.", "tip": "Use ferramenta calibrada e siga a instrução."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Chave de torque com etiqueta vencida (calibração). O que fazer?", "choices": ["A) Usar assim mesmo", "B) Parar e pedir verificação/calibração", "C) Ajustar no olho", "D) Pedir pro colega “apertar forte”"], "a": 1, "why": "Ferramenta fora de calibração mede/aperte errado.", "tip": "Etiqueta vencida = não usar."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Você não entendeu a instrução de trabalho. Melhor atitude?", "choices": ["A) Fazer do seu jeito", "B) Perguntar e confirmar", "C) Copiar sem falar", "D) Deixar para depois"], "a": 1, "why": "Padrão garante peça igual sempre.", "tip": "Dúvida é sinal de cuidado, não de fraqueza."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Gabarito/medidor caiu no chão. O correto é…", "choices": ["A) Usar normal", "B) Avisar e checar antes de usar", "C) Bater para ‘voltar’", "D) Guardar e esquecer"], "a": 1, "why": "Queda pode alterar medição e gerar falso OK.", "tip": "Instrumento é sagrado: queda = checagem."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Rebarba (burr) em peça usinada…", "choices": ["A) Não importa", "B) Pode cortar vedação e causar falha", "C) É sinal de qualidade", "D) Ajuda na montagem"], "a": 1, "why": "Rebarba pode travar montagem e gerar vazamento.", "tip": "Siga o padrão de rebarba: remove ou separa."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Atalho para “ganhar tempo” geralmente…", "choices": ["A) Melhora qualidade", "B) Aumenta risco de erro", "C) É exigido", "D) É padrão"], "a": 1, "why": "Atalho cria variação e defeito.", "tip": "Velocidade boa é a que mantém padrão."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Você viu peça com risco/arranhão em área crítica. O correto é…", "choices": ["A) Montar e torcer", "B) Separar e seguir critério de aceitação", "C) Esconder no meio", "D) Passar pano e pronto"], "a": 1, "why": "Dano em área crítica pode falhar no uso.", "tip": "Critério manda: OK, retrabalho ou refugo."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Re-trabalho sem aprovação (\"só uma lixadinha\") é…", "choices": ["A) Esperteza", "B) Risco grande de piorar a peça", "C) Qualidade", "D) Economia"], "a": 1, "why": "Pode tirar material demais e sair de medida.", "tip": "Retrabalho só com padrão e autorização."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Medição feita “no olho” quando existe gabarito…", "choices": ["A) É normal", "B) Aumenta chance de passar defeito", "C) É mais moderno", "D) É igual"], "a": 1, "why": "Olho não substitui medição quando a tolerância é pequena.", "tip": "Se existe ferramenta, use."}, {"module": "Módulo 3 — Padrão, Medição, Torque e Ferramentas", "q": "Charada: eu sou o ‘jeito certo’ que evita discussão. Quem sou eu?", "choices": ["A) Padrão/Procedimento", "B) Jeitinho", "C) Pressa", "D) Opinião"], "a": 0, "why": "Padrão garante repetibilidade e qualidade.", "tip": "Quando mudar, muda o padrão (não o improviso)."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Defeito no cliente pode virar…", "choices": ["A) Só uma bronca", "B) Parada de linha, devolução e perda de confiança", "C) Um elogio", "D) Nada"], "a": 1, "why": "Em autopeças, defeito pode parar montagem do OEM e custar caro.", "tip": "Pense: ‘eu colocaria isso no meu carro?’"}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Você viu um problema repetindo. A melhor ação é…", "choices": ["A) Continuar para bater meta", "B) Avisar e acionar contenção conforme regra", "C) Guardar para o fim do turno", "D) Ficar quieto"], "a": 1, "why": "Quanto antes conter, menor o impacto no cliente.", "tip": "Pare, sinalize, chame ajuda (líder/qualidade)."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Charada: eu não produzo, mas salvo o cliente. Quem sou eu?", "choices": ["A) Qualidade/Inspeção no processo", "B) Pressa", "C) Atalho", "D) Sorte"], "a": 0, "why": "Controle no processo evita defeito chegar na expedição.", "tip": "Qualidade é de todo mundo, não só do inspetor."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Se você não tem certeza se está OK, o certo é…", "choices": ["A) Mandar assim mesmo", "B) Separar e confirmar", "C) Esconder", "D) Passar para o outro setor"], "a": 1, "why": "Dúvida é risco de defeito no cliente.", "tip": "Regra: dúvida = não segue."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Tag de não conformidade (produto suspeito) serve para…", "choices": ["A) Enfeitar", "B) Impedir uso e avisar todo mundo", "C) Atrapalhar", "D) Só para auditoria"], "a": 1, "why": "Sinaliza bloqueio e evita mistura com material OK.", "tip": "Sem tag/sem bloqueio = risco de envio errado."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Você percebeu que o padrão mudou, mas ninguém avisou. O que fazer?", "choices": ["A) Continuar no antigo", "B) Parar e pedir confirmação/atualização", "C) Inventar um meio termo", "D) Perguntar só no fim do dia"], "a": 1, "why": "Versão errada pode gerar lote inteiro fora do combinado.", "tip": "Trabalho padronizado precisa de comunicação rápida."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Quando a empresa recebe reclamação do cliente, o chão de fábrica tem papel?", "choices": ["A) Não, é só do escritório", "B) Sim, porque o cuidado começa aqui", "C) Só do vendedor", "D) Só do engenheiro"], "a": 1, "why": "Qualidade nasce no processo: prevenção é na linha.", "tip": "Cada operador é ‘dono’ da qualidade da peça."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Charada: eu sou pequeno, mas se eu passar, viro recall. Quem sou eu?", "choices": ["A) Defeito", "B) Brincadeira", "C) Café", "D) Música"], "a": 0, "why": "Defeito em autopeças pode escalar e gerar risco e alto custo.", "tip": "Zero defeito começa no detalhe."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Se alguém errou, a melhor cultura é…", "choices": ["A) Caça às bruxas", "B) Corrigir o processo e ensinar", "C) Fingir que não aconteceu", "D) Culpar o turno"], "a": 1, "why": "Cultura justa reduz repetição do erro e melhora segurança.", "tip": "Foco em causa e padrão, não em culpa."}, {"module": "Módulo 4 — Cliente (OEM), Cultura e Comunicação", "q": "Qualidade não é só ‘inspeção final’. É…", "choices": ["A) Cuidar desde o começo", "B) Só olhar no fim", "C) Só assinar papel", "D) Só auditoria"], "a": 0, "why": "Prevenção no processo é mais barata e eficaz.", "tip": "Faça certo na primeira vez."}]};
+
+    let mode = "train"; // train | challenge
+    let limitSeconds = 12.0;
+
+    let qs = [];
+    let i = 0;
+    let points = 0;
+    let hits = 0;
+    let miss = 0;
+    let combo = 0;
+    let bestCombo = 0;
+    let startedAt = 0;
+    let tick = null;
+
+    const perModule = {}; // name -> {hits, total}
+
+    const $ = (id) => document.getElementById(id);
+
+    function toast(msg) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.style.display = "block";
+      clearTimeout(el._t);
+      el._t = setTimeout(() => (el.style.display = "none"), 1800);
+    }
+
+    function formatTime(s) {
+      return (Math.round(s*10)/10).toFixed(1) + "s";
+    }
+
+    function setScreens(which) {
+      $("startScreen").classList.add("hidden");
+      $("quizScreen").classList.add("hidden");
+      $("endScreen").classList.add("hidden");
+      $(which).classList.remove("hidden");
+    }
+
+    function stopTimer() {
+      if (tick) { clearInterval(tick); tick = null; }
+    }
+
+    function resetAll() {
+      i = 0; points = 0; hits = 0; miss = 0; combo = 0; bestCombo = 0;
+      for (const k of Object.keys(perModule)) delete perModule[k];
+      $("points").textContent = points;
+      $("hits").textContent = hits;
+      $("miss").textContent = miss;
+      $("combo").textContent = combo;
+      $("bestCombo").textContent = bestCombo;
+      $("idx").textContent = 0;
+      $("bar").style.width = "0%";
+      $("time").textContent = "0.0s";
+      $("panel").style.display = "none";
+      $("btnNext").disabled = true;
+      setScreens("startScreen");
+      stopTimer();
+    }
+
+    function shuffle(array) {
+      for (let j = array.length - 1; j > 0; j--) {
+        const k = Math.floor(Math.random() * (j + 1));
+        [array[j], array[k]] = [array[k], array[j]];
+      }
+      return array;
+    }
+
+    function startTimer() {
+      stopTimer();
+      startedAt = performance.now();
+      tick = setInterval(() => {
+        const elapsed = (performance.now() - startedAt)/1000;
+        $("time").textContent = formatTime(elapsed);
+        if (mode === "challenge" && elapsed >= limitSeconds) {
+          stopTimer();
+          lockChoices(null, true);
+          showPanel(false, "Tempo esgotado!");
+        }
+      }, 80);
+    }
+
+    function startQuiz() {
+      qs = JSON.parse(JSON.stringify(DATA.questions));
+
+      // module counters
+      qs.forEach(q => {
+        if (!perModule[q.module]) perModule[q.module] = {hits:0, total:0};
+        perModule[q.module].total += 1;
+      });
+
+      setScreens("quizScreen");
+      renderQ();
+    }
+
+    function updateProgress() {
+      const pct = Math.min(100, Math.round((i/qs.length)*100));
+      $("bar").style.width = pct + "%";
+      $("idx").textContent = i + 1;
+      $("points").textContent = points;
+      $("hits").textContent = hits;
+      $("miss").textContent = miss;
+      $("combo").textContent = combo;
+      $("bestCombo").textContent = bestCombo;
+    }
+
+    function lockChoices(chosenIdx, isAuto=false) {
+      const q = qs[i];
+      const buttons = Array.from(document.querySelectorAll("button.choice"));
+      buttons.forEach((b, idx) => {
+        b.disabled = true;
+        if (idx === q.a) b.classList.add("good");
+        if (!isAuto && chosenIdx === idx && idx !== q.a) b.classList.add("bad");
+      });
+    }
+
+    function showPanel(correct, titleOverride=null) {
+      const q = qs[i];
+      $("panel").style.display = "block";
+      const title = titleOverride ? titleOverride : (correct ? "✅ Certo!" : "❌ Quase!");
+      $("resultTitle").textContent = title;
+      $("resultTitle").style.color = correct ? "var(--good)" : "var(--bad)";
+      $("why").textContent = q.why;
+      $("tip").textContent = q.tip;
+      $("btnNext").disabled = false;
+    }
+
+    function renderQ() {
+      $("panel").style.display = "none";
+      $("btnNext").disabled = true;
+
+      if (i >= qs.length) return endQuiz();
+
+      const q = qs[i];
+      $("moduleTag").textContent = "📦 " + q.module;
+      $("qtext").textContent = q.q;
+
+      const list = $("choices");
+      list.innerHTML = "";
+      q.choices.forEach((c, idx) => {
+        const b = document.createElement("button");
+        b.className = "choice";
+        b.textContent = c;
+        b.addEventListener("click", () => answer(idx));
+        list.appendChild(b);
+      });
+
+      updateProgress();
+      startTimer();
+    }
+
+    function answer(choiceIdx) {
+      stopTimer();
+      const elapsed = (performance.now() - startedAt)/1000;
+      const q = qs[i];
+      const correct = choiceIdx === q.a;
+
+      lockChoices(choiceIdx, false);
+
+      if (correct) {
+        hits += 1;
+        perModule[q.module].hits += 1;
+        combo += 1;
+        if (combo > bestCombo) bestCombo = combo;
+
+        points += 10;
+        if (elapsed <= 5.0) points += 5;      // speed bonus
+        if (combo > 0 && combo % 3 === 0) points += 10; // combo bonus
+
+        showPanel(true);
+      } else {
+        miss += 1;
+        combo = 0;
+        showPanel(false);
+      }
+
+      updateProgress();
+    }
+
+    function endQuiz() {
+      setScreens("endScreen");
+      $("finalPoints").textContent = points;
+      $("finalHits").textContent = hits;
+
+      // badges
+      const badges = [];
+      const m1 = Object.keys(perModule).find(x => x.includes("Módulo 1"));
+      const m2 = Object.keys(perModule).find(x => x.includes("Módulo 2"));
+      const m3 = Object.keys(perModule).find(x => x.includes("Módulo 3"));
+      const m4 = Object.keys(perModule).find(x => x.includes("Módulo 4"));
+
+      function got(mod, need=8) {
+        return perModule[mod] && perModule[mod].hits >= need;
+      }
+
+      if (got(m1)) badges.push("🧼 Anti-Contaminação");
+      if (got(m2)) badges.push("🏷️ Mestre do Lote");
+      if (got(m3)) badges.push("🔧 Torque Certo");
+      if (got(m4)) badges.push("🚚 Cliente em 1º Lugar");
+      if (hits >= 34) badges.push("🏆 Nível Ouro (34+ acertos)");
+      if (hits >= 28 && hits < 34) badges.push("🥈 Nível Prata (28–33 acertos)");
+      if (hits >= 22 && hits < 28) badges.push("🥉 Nível Bronze (22–27 acertos)");
+
+      const container = document.getElementById("badges");
+      container.innerHTML = "";
+      if (badges.length === 0) {
+        container.innerHTML = "<p class='tiny'>Sem conquistas desta vez — mas já valeu o treino! Joga de novo 😉</p>";
+      } else {
+        badges.forEach(x => {
+          const div = document.createElement("div");
+          div.className = "badge";
+          div.textContent = x;
+          container.appendChild(div);
+        });
+      }
+
+      const share =
+`🛠️ QualiDesafio Autopeças — Missão Zero Retrabalho
+
+Acabei de jogar um quiz rápido sobre qualidade no chão de fábrica (BPF, rastreabilidade, torque, contaminação e foco no cliente/OEM).
+
+✅ Minha pontuação: ${points} | Acertos: ${hits}/40 | Melhor combo: ${bestCombo}
+
+Se você trabalha com manufatura, testa também e compartilha o resultado!
+
+#Qualidade #Autopeças #ChãoDeFábrica #BPF #Rastreabilidade #ZeroDefeitos`;
+
+      document.getElementById("btnCopy").onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(share);
+          toast("Texto copiado! Cole no LinkedIn 😉");
+        } catch (e) {
+          const ta = document.createElement("textarea");
+          ta.value = share;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          toast("Texto copiado! (modo alternativo)");
+        }
+      };
+
+      document.getElementById("btnDownload").onclick = () => {
+        const lines = [
+          DATA.title,
+          DATA.subtitle,
+          "",
+          `Pontuação: ${points}`,
+          `Acertos: ${hits}/40`,
+          `Erros: ${miss}`,
+          `Melhor combo: ${bestCombo}`,
+          "",
+          "Resultado por módulo:",
+        ];
+        Object.keys(perModule).forEach(k => {
+          lines.push(`- ${k}: ${perModule[k].hits}/${perModule[k].total}`);
+        });
+        const blob = new Blob([lines.join("\n")], {type: "text/plain;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "resultado-quali-desafio-autopecas.txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      };
+
+      document.getElementById("btnPlayAgain").onclick = () => {
+        resetAll();
+        startQuiz();
+      };
+    }
+
+    // Buttons
+    document.getElementById("btnStart").addEventListener("click", () => startQuiz());
+    document.getElementById("btnShuffle").addEventListener("click", () => {
+      const copy = JSON.parse(JSON.stringify(DATA.questions));
+      shuffle(copy);
+      DATA.questions = copy;
+      toast("Perguntas embaralhadas!");
+    });
+    document.getElementById("btnMode").addEventListener("click", () => {
+      mode = (mode === "train") ? "challenge" : "train";
+      document.getElementById("modeLabel").textContent = (mode === "train") ? "Treino" : "Desafio";
+      toast(mode === "train" ? "Modo Treino: sem tempo limite" : "Modo Desafio: 12s por pergunta");
+    });
+    document.getElementById("btnNext").addEventListener("click", () => { i += 1; renderQ(); });
+    document.getElementById("btnRestart").addEventListener("click", () => { resetAll(); startQuiz(); });
+
+    // Init
+    resetAll();
+  </script>
+</body>
+</html>
